@@ -1,16 +1,16 @@
 # 3 Etapas
 
 # Dependencies
-FROM node:21-alpine3.19 AS deps
+FROM node:22-alpine3.19 AS deps
 WORKDIR /usr/src/app
 
 COPY package.json ./
-# COPY package-lock.json ./
+COPY yarn.lock ./
 
-RUN npm install
+RUN yarn install --frozen-lockfile
 
 # Builder
-FROM node:21-alpine3.19 AS build
+FROM node:22-alpine3.19 AS build
 
 WORKDIR /usr/src/app
 
@@ -20,18 +20,16 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 # Copiar todo el codigo fuente de la app
 COPY . .
 
-# RUN npm run test
-RUN npm run build
+# RUN yarn test
+RUN yarn build
 
 # Dejamos las dependencias de produccion 
-RUN npm ci -f --only=production && npm cache clean --force
-
-
+RUN yarn install --production --frozen-lockfile && yarn cache clean
 
 
 # Imagen final
 
-FROM node:21-alpine3.19 AS prod
+FROM node:22-alpine3.19 AS prod
 
 WORKDIR /usr/src/app
 
